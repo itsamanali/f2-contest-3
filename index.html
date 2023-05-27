@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coin Data</title>
+    <style>
+        /* CSS styles for the layout */
+        body {
+            background-color: gray;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 75%;
+            position: absolute;
+            top: 50px;
+            display: flex;
+            flex-direction: column;
+
+            align-items: center;
+            background-color: black;
+            color: white;
+        }
+
+        .container-search {
+            position: relative;
+
+            width: 80%;
+        }
+
+        .container-search .search-container {
+            height: 30px;
+            width: 30%;
+        }
+
+        #search {
+            height: 30px;
+
+            width: 10%;
+        }
+
+        .container-search .sort {
+            height: 30px;
+
+            width: 20%;
+        }
+
+        .container-search>input {
+            border: 2px solid gray;
+            background-color: black;
+            color: white;
+        }
+
+        .container-search>input:hover {
+            cursor: pointer;
+        }
+
+        .table-container {
+            margin-top: 20px;
+            width: 80%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 8px;
+        }
+
+        tr {
+            border-bottom: 1px solid gray;
+        }
+
+        .search-container {
+            margin-top: 20px;
+        }
+
+        @media screen and (max-width: 768px) {
+            /* Styles for tablet screen */
+            .container {
+                width: 90%;
+            }
+
+            .container-search .search-container,
+            .container-search .sort {
+                width: 40%;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            /* Styles for mobile screen */
+            .container {
+                width: 95%;
+            }
+
+            .container-search .search-container,
+            .container-search .sort {
+                width: 50%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="container-search">
+            <input type="text" class="search-container" id="searchInput" placeholder="Search by name or symbol" />
+            <input type="submit" id="search" onclick="searchData()" value="Search"> 
+            <input type="submit" class="sort" onclick="sortDataByMkt('market_cap')" value="Sort by market cap"> 
+            <input type="submit" class="sort" onclick="sortDataByPrcnt('price_change_percentage')" value="Sort by Percent Change"> 
+        </div>
+
+        <div class="table-container">
+            <table>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Function to display the data in table format
+        function displayDataInTable(data) {
+            const tableBody = document.getElementById("tableBody");
+
+            // Clear existing rows
+            tableBody.innerHTML = "";
+
+            data.forEach((item) => {
+                const row = document.createElement("tr");
+
+                const imageCell = document.createElement("td");
+                const image = document.createElement("img");
+                image.src = item.image;
+                image.width = 50;
+                image.height = 50;
+                imageCell.appendChild(image);
+
+                const nameCell = document.createElement("td");
+                nameCell.textContent = item.name;
+
+                const symbolCell = document.createElement("td");
+                symbolCell.textContent = item.symbol;
+
+                const priceCell = document.createElement("td");
+                priceCell.textContent = item.current_price;
+
+                const volumeCell = document.createElement("td");
+                volumeCell.textContent = item.total_volume;
+
+                const price_change_percentage = document.createElement("td");
+                price_change_percentage.textContent =
+                    item.price_change_percentage_24h;
+                if (item.price_change_percentage_24h > 0) {
+                    price_change_percentage.setAttribute("style", "color : green");
+                } else if (item.price_change_percentage_24h < 0) {
+                    price_change_percentage.setAttribute("style", "color : red");
+                }
+
+                const market_cap = document.createElement("td");
+                market_cap.textContent = "Market Cap : " + item.market_cap;
+
+                row.appendChild(imageCell);
+                row.appendChild(nameCell);
+                row.appendChild(symbolCell);
+                row.appendChild(priceCell);
+                row.appendChild(volumeCell);
+                row.appendChild(price_change_percentage);
+                row.appendChild(market_cap);
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Function to search and filter the data
+        function searchData() {
+            const searchInput = document.getElementById("searchInput");
+            const keyword = searchInput.value.trim().toLowerCase();
+
+            const filteredData = data.filter(
+                (item) =>
+                    item.name.toLowerCase().includes(keyword) ||
+                    item.symbol.toLowerCase().includes(keyword)
+            );
+
+            displayDataInTable(filteredData);
+        }
+
+        // Function to sort the data
+        function sortDataByMkt(sortBy) {
+            const sortedData1 = [...data];
+
+            sortedData1.sort((a, b) => b.market_cap - a.market_cap);
+
+            displayDataInTable(sortedData1);
+        }
+
+        function sortDataByPrcnt(sortBy) {
+            const sortedData2 = [...data];
+
+            sortedData2.sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
+
+            displayDataInTable(sortedData2);
+        }
+
+        // Fetch the data from the API
+        const apiUrl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false";
+
+        async function fetchData() {
+        try {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            window.data = data;
+            displayDataInTable(data);
+        } catch (error) {
+            console.error("Error:", error);
+        }
+        }
+
+        fetchData();
+    </script>
+</body>
+
+</html>
